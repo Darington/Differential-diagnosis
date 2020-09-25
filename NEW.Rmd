@@ -1,0 +1,150 @@
+---
+title: "NEW"
+author: "Darlington"
+date: "2020/8/25"
+output:
+ html_document:
+    theme: united
+    highlight: tango
+    code_folding: hide
+---
+
+```{r, echo=FALSE, message = FALSE}
+library(pROC)
+library("knitr")
+library("kableExtra")
+library(readxl)
+library(ggplot2)
+
+# Table of contents {.tabset .tabset-fade .tabset-pills}
+dat=read_excel("NEW.xlsx",sheet = "W")## Upper respiratory tract infection vs whole pneumonia
+dat1=read_excel("NEW.xlsx",sheet = "V")## Upper respiratory tract infection vs virus pneumonia
+dat2=read_excel("NEW.xlsx",sheet = "B")## bacterial vs virus pneumonia
+
+
+dat$t=as.factor(dat$t)
+
+ggplot(dat, aes(CRP, fill = t)) + geom_density(alpha = 0.2)
+```
+# Table of contents {.tabset .tabset-fade .tabset-pills}
+## Outliers detect
+```{r,echo=FALSE, message = FALSE}
+
+par(las=2, font=5, bty='l', ps=6)
+boxplot(dat[,4:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)))
+
+```
+
+## Missing data detect & process
+```{r, echo=FALSE, message = FALSE, warning=FALSE}
+library("VIM")  
+library(mice)
+md.pattern(dat[,2:11])
+aggr(dat[,2:11], prop = T, numbers = T)
+
+
+
+```
+
+
+## univariate logistic regression
+```{r, echo=FALSE, message = FALSE, warning=FALSE}
+library(purrr)
+
+
+
+## virus
+logit_reg<-function(x){
+  coef(summary(glm(T~x, data=dat1,family="binomial")))[2,]
+}
+result<-map(dat1[,c(2:14)],logit_reg)
+result
+
+```
+
+
+```{r,echo=FALSE, message = FALSE}
+set.seed(1325)
+library(AUC)
+
+## VIRUS
+pre<-glm(T~AGE + SEX +LMR +NLR +CRP +FEVER +COUGH +Rhinorrhea, data = dat,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+
+glm.probs <- predict.glm(pre, type="response", newdata=dat)
+sum(ifelse(glm.probs>0.5,1,0)==dat$T)
+drop1(glm.step)
+
+
+plot(roc(glm.probs,as.factor(dat$T)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(dat$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+## whole
+pre<-glm(T~AGE + SEX + LMR + NLR + COUGH + FEVER +Rhinorrhea +CRP, data = dat1,family = binomial("logit"))
+glm.step<-step(pre) 
+summary(glm.step)
+
+
+glm.probs <- predict.glm(pre, type="response", newdata=dat1)
+sum(ifelse(glm.probs>0.5,1,0)==dat1$T)
+drop1(glm.step)
+
+
+plot(roc(glm.probs,as.factor(dat$T)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(dat$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+```
+
+
+
+
+
+## model
+#```{r, echo=FALSE, message = FALSE, warning=FALSE}
+set.seed(1234)
+
+N=length(dat$T)
+
+ind=sample(2,N,replace=TRUE,prob=c(0.7,0.3))
+
+ 
+
+dat_train=dat[ind==1,]
+dat_test=dat[ind==2,]
+
+pre=glm(T~CRP,data=dat_train,family=gaussian(link="identity"))
+
+summary(pre)
+
+ 
+
+real=dat_test$T
+predict_=predict.glm(pre,type="response",newdata=dat_test)
+predict=ifelse(predict_>0.5,1,0)
+dat_test$predict=predict
+
+head(dat_test)
+
+true_value=dat_test$T
+predict_value=dat_test[,17]
+
+
+
+
+library(ROCR)      
+pred <- prediction(predict_,true_value)
+performance(pred,'auc')@y.values
+perf <- performance(pred,'tpr','fpr') 
+
+plot(perf,plot = TRUE,legacy.axes=TRUE,percent=TRUE,xlab="False Positive Precentage", ylab="True Positive Percentage", col="234",lwd=5, print.auc=TRUE) 
+```
+
+
+
+
+
+
+

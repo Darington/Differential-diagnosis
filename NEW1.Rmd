@@ -1,0 +1,273 @@
+---
+title: "NEW"
+author: "Darlington"
+date: "2020/8/28"
+output: html_document
+---
+```{r}
+library(pROC)
+library("knitr")
+library("kableExtra")
+library(readxl)
+
+dat=read_excel("NEW.xlsx",sheet = "2")
+dat1=read_excel("NEW.xlsx",sheet = "VM")
+dat2=read_excel("NEW.xlsx",sheet = "MB")
+#par(las=2, font=5, bty='l', ps=6)
+#boxplot(dat[,4:13], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)))
+```
+
+
+## VB
+```{r}
+
+library(Hmisc)
+
+dat$CRP=impute(dat$CRP,median)
+dat$PCT=impute(dat$PCT,median)
+dat$NC=impute(dat$NC,median)
+dat$MC=impute(dat$MC,median)
+dat$EC=impute(dat$EC,median)
+dat$WBC=impute(dat$WBC,median)
+dat$LC=impute(dat$LC,median)
+
+dat$LMR=dat$LC/dat$MC
+dat$NLR=dat$NC/dat$LC
+```
+library(purrr)
+logit_reg<-function(x){
+  coef(summary(glm(t~x, data=dat,family="binomial")))[2,]
+}
+result<-map(dat[,2:18],logit_reg)
+result
+
+## multivariate logistic regression
+```{r}
+library(AUC)
+
+## whole
+pre<-glm(T~AGE + SEX + LMR + NLR + COUGH + FEVER +Rhinorrhea +CRP, data = dat,family = binomial("logit"))
+glm.step<-step(pre) 
+summary(glm.step)
+
+
+glm.probs <- predict.glm(pre, type="response", newdata=dat)
+sum(ifelse(glm.probs>0.5,1,0)==dat$T)
+drop1(glm.step)
+
+
+plot(roc(glm.probs,as.factor(dat$T)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(dat$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+
+```
+
+
+
+
+## MB
+#```{r}
+
+
+library(Hmisc)
+dat2$CRP=impute(dat2$CRP,median)
+dat2$PCT=impute(dat2$PCT,median)
+dat2$NC=impute(dat2$NC,median)
+dat2$MC=impute(dat2$MC,median)
+dat2$EC=impute(dat2$EC,median)
+dat2$WBC=impute(dat2$WBC,median)
+dat2$LC=impute(dat2$LC,median)
+
+dat2$CPR=dat2$CRP/dat2$PCT
+dat2$LMR=dat2$LC/dat2$MC
+dat2$NLR=dat2$NC/dat2$LC
+```
+
+library(purrr)
+logit_reg<-function(x){
+  coef(summary(glm(t~x, data=dat2,family="binomial")))[2,]
+}
+result<-map(dat2[,2:18],logit_reg)
+result
+
+
+
+## multivariate logistic regression
+#```{r}
+library(AUC)
+
+## whole
+pre<-glm(t~NC, data = dat2,family = binomial("logit"))
+glm.step<-step(pre) 
+summary(glm.step)
+
+glm.probs <- predict.glm(pre, type="response", newdata=dat2)
+sum(ifelse(glm.probs>0.5,1,0)==dat2$t)
+drop1(glm.step)
+
+
+plot(roc(glm.probs,as.factor(dat2$t)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(dat2$t)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+
+
+```
+
+
+
+## model
+#```{r}
+set.seed(1234)
+
+N=length(dat2$t)
+
+ind=sample(2,N,replace=TRUE,prob=c(0.7,0.3))
+
+ 
+
+dat_train=dat2[ind==1,]
+dat_test=dat2[ind==2,]
+
+pre=glm(t~AGE+CPR+OUTU+FEVER+NLR+COUGH+Rhinorrhea,data=dat_train,family=gaussian(link="identity"))
+
+summary(pre)
+
+ 
+
+real=dat_test$t
+predict_=predict.glm(pre,type="response",newdata=dat_test)
+predict=ifelse(predict_>0.5,1,0)
+dat_test$predict=predict
+
+head(dat_test)
+
+true_value=dat_test$t
+predict_value=dat_test[,22]
+
+error=predict_value-true_value
+accuracy=(nrow(dat_test)-sum(abs(error)))/nrow(dat_test)
+precision=sum(true_value & predict_value)/sum(predict_value)
+recall=sum(predict_value & true_value)/sum(true_value)
+F_measure=2*precision*recall/(precision+recall) 
+
+print(accuracy) 
+print(precision) 
+print(recall) 
+print(F_measure) 
+
+
+
+library(ROCR)      
+pred <- prediction(predict_,true_value)
+performance(pred,'auc')@y.values
+perf <- performance(pred,'tpr','fpr') 
+
+plot(perf) 
+
+```
+## VM
+#```{r}
+
+library(Hmisc)
+
+dat1$CRP=impute(dat1$CRP,median)
+dat1$PCT=impute(dat1$PCT,median)
+dat1$NC=impute(dat1$NC,median)
+dat1$MC=impute(dat1$MC,median)
+dat1$EC=impute(dat1$EC,median)
+dat1$WBC=impute(dat1$WBC,median)
+dat1$LC=impute(dat1$LC,median)
+
+dat1$CPR=dat1$CRP/dat1$PCT
+dat1$LMR=dat1$LC/dat1$MC
+dat1$NLR=dat1$NC/dat1$LC
+
+
+
+```
+
+
+## multivariate logistic regression
+#```{r}
+library(AUC)
+
+## whole
+pre<-glm(t~CRP, data = dat2,family = binomial("logit"))
+glm.step<-step(pre) 
+summary(glm.step)
+
+glm.probs <- predict.glm(pre, type="response", newdata=dat2)
+sum(ifelse(glm.probs>0.5,1,0)==dat2$t)
+drop1(glm.step)
+
+
+plot(roc(glm.probs,as.factor(dat2$t)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(dat2$t)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+
+
+```
+
+library(purrr)
+logit_reg<-function(x){
+  coef(summary(glm(t~x, data=dat1,family="binomial")))[2,]
+}
+result<-map(dat1[,2:18],logit_reg)
+result
+
+
+
+
+## model
+#```{r}
+set.seed(1234)
+
+N=length(dat1$t)
+
+ind=sample(2,N,replace=TRUE,prob=c(0.7,0.3))
+
+ 
+
+dat_train=dat1[ind==1,]
+dat_test=dat1[ind==2,]
+
+pre=glm(t~NC,data=dat_train,family=gaussian(link="identity"))
+
+summary(pre)
+
+ 
+
+real=dat_test$t
+predict_=predict.glm(pre,type="response",newdata=dat_test)
+predict=ifelse(predict_>0.5,1,0)
+dat_test$predict=predict
+
+head(dat_test)
+
+true_value=dat_test$t
+predict_value=dat_test[,22]
+
+error=predict_value-true_value
+accuracy=(nrow(dat_test)-sum(abs(error)))/nrow(dat_test)
+precision=sum(true_value & predict_value)/sum(predict_value)
+recall=sum(predict_value & true_value)/sum(true_value)
+F_measure=2*precision*recall/(precision+recall) 
+
+print(accuracy) 
+print(precision) 
+print(recall) 
+print(F_measure) 
+
+
+
+library(ROCR)      
+pred <- prediction(predict_,true_value)
+performance(pred,'auc')@y.values
+perf <- performance(pred,'tpr','fpr') 
+
+plot(perf) 
+
+```

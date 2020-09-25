@@ -1,0 +1,435 @@
+---
+title: "VB"
+author: "Darlington"
+date: "2020/8/28"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+library(pROC)
+library("knitr")
+library("kableExtra")
+library(readxl)
+library(ggplot2)
+library(ggpubr)
+
+
+dat=read_excel("dat.xlsx",sheet = "V")
+dat1=read_excel("dat.xlsx",sheet = "B")
+dat2=read_excel("dat.xlsx",sheet = "U")
+da=read_excel("dat.xlsx",sheet = "1")
+da1=read_excel("dat.xlsx",sheet = "2")
+da2=read_excel("dat.xlsx",sheet = "3")
+```
+
+
+## Outliers detect
+#```{r}
+
+
+par(las=2, font=5, bty='l', ps=6)
+boxplot(dat[,3:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)),main="VIRUS")
+boxplot(dat1[,3:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)),main="BAC")
+boxplot(dat2[,3:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)),main="URTI")
+
+```
+
+
+#```{r}
+library(ROCR)
+for (i in da[,4:11]) {
+  pred=prediction(i,da$T)
+perf_AUC=performance(pred,"auc") #Calculate the AUC value
+perf_AUC@y.values[[1]]
+perf_ROC=performance(pred,"tpr","fpr") #plot the actual ROC curve
+par(pty="s")
+plot(roc(predictor=i,response=as.factor(da$T)), col="24", main = "WHOLE",legacy.axes=TRUE,percent=TRUE,)
+auc(roc(predictor=i,as.factor(da$T)))
+}
+
+
+for (i in da1[,4:11]) {
+  pred=prediction(i,da1$T)
+perf_AUC=performance(pred,"auc") #Calculate the AUC value
+perf_AUC@y.values[[1]]
+perf_ROC=performance(pred,"tpr","fpr") #plot the actual ROC curve
+par(pty="s")
+plot(roc(predictor=i,response=as.factor(da1$T)), col="24", main = "VIRUS",legacy.axes=TRUE,percent=TRUE,)
+auc(roc(predictor=i,as.factor(da1$T)))
+}
+
+
+for (i in da2[,4:11]) {
+  pred=prediction(i,da2$T)
+perf_AUC=performance(pred,"auc") #Calculate the AUC value
+perf_AUC@y.values[[1]]
+perf_ROC=performance(pred,"tpr","fpr") #plot the actual ROC curve
+par(pty="s")
+plot(roc(predictor=i,response=as.factor(da2$T)), col="24", main = "BAC",legacy.axes=TRUE,percent=TRUE,)
+auc(roc(predictor=i,as.factor(da2$T)))
+}
+```
+
+
+
+#```{r}
+ggscatter(dat,
+          x = "NLR", 
+          y = "CRP",
+          add = "reg.line",
+          conf.int = TRUE,
+          cor.coef = TRUE, 
+          cor.method = "pearson",
+          xlab = "NLR", 
+          ylab = "CRP")
+ggscatter(dat1,
+          x = "NLR", 
+          y = "CRP",
+          add = "reg.line",
+          conf.int = TRUE,
+          cor.coef = TRUE, 
+          cor.method = "pearson",
+          xlab = "NLR", 
+          ylab = "CRP")
+ggscatter(dat2,
+          x = "NLR", 
+          y = "CRP",
+          add = "reg.line",
+          conf.int = TRUE,
+          cor.coef = TRUE, 
+          cor.method = "pearson",
+          xlab = "NLR", 
+          ylab = "CRP")
+ggscatter(dat,
+          x = "LMR", 
+          y = "CRP",
+          add = "reg.line",
+          conf.int = TRUE,
+          cor.coef = TRUE, 
+          cor.method = "pearson",
+          xlab = "LMR", 
+          ylab = "CRP")
+ggscatter(dat1,
+          x = "LMR", 
+          y = "CRP",
+          add = "reg.line",
+          conf.int = TRUE,
+          cor.coef = TRUE, 
+          cor.method = "pearson",
+          xlab = "LMR", 
+          ylab = "CRP")
+ggscatter(dat2,
+          x = "LMR", 
+          y = "CRP",
+          add = "reg.line",
+          conf.int = TRUE,
+          cor.coef = TRUE, 
+          cor.method = "pearson",
+          xlab = "LMR", 
+          ylab = "CRP")
+
+ggplot(da, aes(MC,fill=t)) + geom_density(alpha = 0.2)
+ggplot(da, aes(LC,fill=t)) + geom_density(alpha = 0.2)
+ggplot(da, aes(EC,fill=t)) + geom_density(alpha = 0.2)
+ggplot(da, aes(WBC,fill=t)) + geom_density(alpha = 0.2)
+ggplot(da, aes(NC,fill=t)) + geom_density(alpha = 0.2)
+ggplot(da, aes(CRP,fill=t)) + geom_density(alpha = 0.2)
+ggplot(da, aes(LMR,fill=t)) + geom_density(alpha = 0.2)
+ggplot(da, aes(NLR,fill=t)) + geom_density(alpha = 0.2)
+```
+
+## Boxplot 
+#```{r}
+
+da$t=as.factor(da$t)
+library(ggplot2)
+library(ggpubr)
+library(RColorBrewer)
+da$LMR=log(da$LMR)
+da$NLR=log(da$NLR)
+da$CRP=log(da$CRP)
+da$NC=log(da$NC)
+da$LC=log(da$LC)
+da$WBC=log(da$WBC)
+da$EC=log(da$EC)
+da$MC=log(da$MC)
+
+ggplot(da,aes(x=t,y=LMR,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("LMR ratio, mg/µg (logarithmic scale)")
+
+  
+
+ggplot(da,aes(x=t,y=CRP,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("CRP concentration, mg/L (logarithmic scale) ")
+
+ggplot(da,aes(x=t,y=NLR,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("NLR ratio, mg/µg (logarithmic scale)")
+
+
+ggplot(da,aes(x=t,y=NC,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("NC, mg/µg (logarithmic scale)")
+
+ggplot(da,aes(x=t,y=LC,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("LC, mg/µg (logarithmic scale)")
+
+ggplot(da,aes(x=t,y=MC,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("MC, mg/µg (logarithmic scale)")
+
+ggplot(da,aes(x=t,y=EC,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("EC, mg/µg (logarithmic scale)")
+ggplot(da,aes(x=t,y=WBC,color=t))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(
+    panel.grid = element_blank(),
+    
+  )+
+  scale_color_manual(values=brewer.pal(4,'Set1'))+
+  ylab("WBC, mg/µg (logarithmic scale)")
+
+```
+
+
+## Univariate  Analysis                                
+#```{r}
+library(purrr)
+logit_reg<-function(x){
+  coef(summary(glm(T~x, data=da,family="binomial")))[2,]
+}
+result<-map(da[,2:14],logit_reg)
+result
+logit_reg<-function(x){
+  coef(summary(glm(T~x, data=da1,family="binomial")))[2,]
+}
+result1<-map(da1[,2:14],logit_reg)
+result1
+logit_reg<-function(x){
+  coef(summary(glm(T~x, data=da2,family="binomial")))[2,]
+}
+result2<-map(da2[,2:14],logit_reg)
+result2
+```
+
+
+## Univariate analysis
+#```{r}
+library(AUC)
+for (i in da[,4:11]) {
+  pre<-glm(T~i, data = da,family = binomial)
+  glm.step<-step(pre) 
+  summary(glm.step)
+
+  glm.probs <- predict.glm(pre, type="response", newdata=da)
+  sum(ifelse(glm.probs>0.5,1,0)==da$T)
+  drop1(glm.step)
+
+  plot(roc(glm.probs,as.factor(da$T)), col=rainbow(10), main = "WHOLE")
+  Ir.auc<- auc(roc(glm.probs, as.factor(da$T)))
+  text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+}
+
+for (i in da1[,4:11]) {
+  pre<-glm(T~i, data = da1,family = binomial)
+  glm.step<-step(pre) 
+  summary(glm.step)
+
+  glm.probs <- predict.glm(pre, type="response", newdata=da1)
+  sum(ifelse(glm.probs>0.5,1,0)==da1$T)
+  drop1(glm.step)
+
+  plot(roc(glm.probs,as.factor(da1$T)), col=rainbow(10), main = "VIRUS")
+  Ir.auc<- auc(roc(glm.probs, as.factor(da1$T)))
+  text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+}
+
+for (i in da2[,4:11]) {
+  pre<-glm(T~i, data = da2,family = binomial)
+  glm.step<-step(pre) 
+  summary(glm.step)
+
+  glm.probs <- predict.glm(pre, type="response", newdata=da2)
+  sum(ifelse(glm.probs>0.5,1,0)==da2$T)
+  drop1(glm.step)
+
+  plot(roc(glm.probs,as.factor(da2$T)), col=rainbow(10), main = "BAC")
+  Ir.auc<- auc(roc(glm.probs, as.factor(da2$T)))
+  text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+}
+
+```
+
+
+
+## multivariate logistic regression
+#```{r}
+set.seed(1325)
+library(AUC)
+
+
+pre<-glm(T~NLR+AGE+FEVER+COUGH+RHI+LMR, data = da,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+
+glm.probs <- predict.glm(pre, type="response", newdata=da)
+sum(ifelse(glm.probs>0.5,1,0)==da$T)
+drop1(glm.step)
+
+plot(roc(glm.probs,as.factor(da$T)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(da$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+pre<-glm(T~MC+LC+AGE+FEVER+COUGH+RHI+NC, data = da,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+glm.probs <- predict.glm(pre, type="response", newdata=da)
+sum(ifelse(glm.probs>0.5,1,0)==da$T)
+drop(glm.step)
+
+plot(roc(glm.probs,as.factor(da$T)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(da$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+pre<-glm(T~NLR+AGE+SEX+CRP+FEVER+COUGH+RHI+LMR, data = da1,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+
+glm.probs <- predict.glm(pre, type="response", newdata=da1)
+sum(ifelse(glm.probs>0.5,1,0)==da1$T)
+drop1(glm.step)
+
+plot(roc(glm.probs,as.factor(da1$T)), col=rainbow(10), main = "VIRUS")
+Ir.auc<- auc(roc(glm.probs, as.factor(da1$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+pre<-glm(T~MC+LC+WBC+AGE+FEVER+CRP+SEX+COUGH+RHI+NC, data = da1,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+glm.probs <- predict.glm(pre, type="response", newdata=da1)
+sum(ifelse(glm.probs>0.5,1,0)==da1$T)
+drop(glm.step)
+
+plot(roc(glm.probs,as.factor(da1$T)), col=rainbow(10), main = "VIRUS")
+Ir.auc<- auc(roc(glm.probs, as.factor(da1$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+pre<-glm(T~NLR+CRP+FEVER+COUGH+RHI+LMR, data = da2,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+
+glm.probs <- predict.glm(pre, type="response", newdata=da2)
+sum(ifelse(glm.probs>0.5,1,0)==da2$T)
+drop1(glm.step)
+
+plot(roc(glm.probs,as.factor(da2$T)), col=rainbow(10), main = "BAC")
+Ir.auc<- auc(roc(glm.probs, as.factor(da2$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+pre<-glm(T~MC+LC+CRP+FEVER+COUGH+RHI+NC, data = da2,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+glm.probs <- predict.glm(pre, type="response", newdata=da2)
+sum(ifelse(glm.probs>0.5,1,0)==da2$T)
+drop(glm.step)
+
+plot(roc(glm.probs,as.factor(da2$T)), col=rainbow(10), main = "BAC")
+Ir.auc<- auc(roc(glm.probs, as.factor(da2$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+```
+
+
+## multivariate logistic regression
+```{r}
+set.seed(1325)
+library(AUC)
+
+
+
+
+pre<-glm(T~AGE+FEVER+COUGH+RHI, data = da,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+glm.probs <- predict.glm(pre, type="response", newdata=da)
+sum(ifelse(glm.probs>0.5,1,0)==da$T)
+drop(glm.step)
+
+plot(roc(glm.probs,as.factor(da$T)), col=rainbow(10), main = "WHOLE")
+Ir.auc<- auc(roc(glm.probs, as.factor(da$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+
+
+pre<-glm(T~AGE+FEVER+SEX+COUGH+RHI, data = da1,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+glm.probs <- predict.glm(pre, type="response", newdata=da1)
+sum(ifelse(glm.probs>0.5,1,0)==da1$T)
+drop(glm.step)
+
+plot(roc(glm.probs,as.factor(da1$T)), col=rainbow(10), main = "VIRUS")
+Ir.auc<- auc(roc(glm.probs, as.factor(da1$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+
+
+
+pre<-glm(T~FEVER+COUGH+RHI, data = da2,family = binomial)
+glm.step<-step(pre) 
+summary(glm.step)
+glm.probs <- predict.glm(pre, type="response", newdata=da2)
+sum(ifelse(glm.probs>0.5,1,0)==da2$T)
+drop(glm.step)
+
+plot(roc(glm.probs,as.factor(da2$T)), col=rainbow(10), main = "BAC")
+Ir.auc<- auc(roc(glm.probs, as.factor(da2$T)))
+text(0.8,0.2,labels=paste('AUC', round(Ir.auc,3),sep = ''),cex = 1.2)
+```
