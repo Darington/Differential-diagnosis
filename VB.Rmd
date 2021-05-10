@@ -41,7 +41,7 @@ boxplot(dat2[,3:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)),main="U
 ```
 ## Lasso regression
 ```{r}
-x = as.matrix(dat[, 3:11]) #data5为自己的数据集
+x = as.matrix(dat[, 3:11]) 
 y = as.matrix(dat$T)
 lar1 <-lars(x,y,type = "lasso")
 lar1
