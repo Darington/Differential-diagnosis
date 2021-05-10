@@ -17,6 +17,7 @@ library(ggplot2)
 library(ggpubr)
 library(purrr)
 library(AUC)
+library(lars)
 
 
 dat=read_excel("dat.xlsx",sheet = "V")
@@ -38,7 +39,18 @@ boxplot(dat1[,3:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)),main="B
 boxplot(dat2[,3:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)),main="URTI")
 
 ```
+## Lasso regression
+```{r}
+x = as.matrix(dat[, 3:11]) #data5为自己的数据集
+y = as.matrix(dat$T)
+lar1 <-lars(x,y,type = "lasso")
+lar1
+coef <-coef.lars(lar,mode="step",s=3)
+coef[coef!=0] 
+predict(lar1,data.frame(SHDI=0,MIDU=0,LSI=0,CONTAF=0,MPS=0,PD=0),s=3)
+plot(lar1)
 
+```
 
 ```{r}
 library(ROCR)
