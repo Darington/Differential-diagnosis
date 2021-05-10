@@ -26,7 +26,7 @@ da2=read_excel("dat.xlsx",sheet = "3")
 
 
 ## Outliers detect
-#```{r}
+```{r}
 
 
 par(las=2, font=5, bty='l', ps=6)
@@ -37,7 +37,7 @@ boxplot(dat2[,3:11], cex=0.5, pch=16, col=runif(nrow(dat), 1, nrow(dat)),main="U
 ```
 
 
-#```{r}
+```{r}
 library(ROCR)
 for (i in da[,4:11]) {
   pred=prediction(i,da$T)
@@ -74,7 +74,7 @@ auc(roc(predictor=i,as.factor(da2$T)))
 
 
 
-#```{r}
+```{r}
 ggscatter(dat,
           x = "NLR", 
           y = "CRP",
@@ -141,7 +141,7 @@ ggplot(da, aes(NLR,fill=t)) + geom_density(alpha = 0.2)
 ```
 
 ## Boxplot 
-#```{r}
+```{r}
 
 da$t=as.factor(da$t)
 library(ggplot2)
@@ -242,7 +242,7 @@ ggplot(da,aes(x=t,y=WBC,color=t))+
 
 
 ## Univariate  Analysis                                
-#```{r}
+```{r}
 library(purrr)
 logit_reg<-function(x){
   coef(summary(glm(T~x, data=da,family="binomial")))[2,]
@@ -312,7 +312,7 @@ for (i in da2[,4:11]) {
 
 
 ## multivariate logistic regression
-#```{r}
+```{r}
 set.seed(1325)
 library(AUC)
 
