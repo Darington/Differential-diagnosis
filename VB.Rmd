@@ -9,11 +9,14 @@ output:
 ```{r}
 knitr::opts_chunk$set(echo = TRUE)
 library(pROC)
+library(ROCR)
 library("knitr")
 library("kableExtra")
 library(readxl)
 library(ggplot2)
 library(ggpubr)
+library(purrr)
+library(AUC)
 
 
 dat=read_excel("dat.xlsx",sheet = "V")
