@@ -263,7 +263,7 @@ result2
 
 
 ## Univariate analysis
-#```{r}
+```{r}
 library(AUC)
 for (i in da[,4:11]) {
   pre<-glm(T~i, data = da,family = binomial)
